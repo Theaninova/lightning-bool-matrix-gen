@@ -3,6 +3,8 @@ import java.time.LocalDateTime
 /**
  * Prints the header to the command line
  */
+@kotlin.ExperimentalUnsignedTypes
+@kotlin.ExperimentalStdlibApi
 fun main() {
     // 8x8 matrix with zeros
     val positions = Array(8) { Array(8) { 0 } }
@@ -60,6 +62,16 @@ ${printMatrixQuadrants(positions)}
 
 ${printMatrix(positions)}
 
+${printMatrixBitwiseOpsDocs(positions)}
+
+${printMatrixBitwiseOpsSet(positions)}
+
+${printMatrixBitwiseOpsUnset(positions)}
+
+#define set_true(matrix, x, y) (matrix | mat_set_masks[x][y])
+#define set_false(matrix, x, y) (matrix & mat_unset_masks[x][y])
+#define get(matrix, x, y) (matrix & mat_set_masks[x][y])
+
 #endif //UNTITLED4_LIGHTNING_MATRIX_H
     """
 
@@ -72,7 +84,7 @@ fun printMatrix(matrix: Array<Array<Int>>): String {
 ${matrix.joinToString(
     prefix = "static unsigned short mat_positions[8][8] = {\n",
     separator = ",\n",
-    postfix = "\n}") {
+    postfix = "\n};") {
         it.joinToString(separator = ", ", prefix = "    {", postfix = "}") { number -> number.toString().padStart(2, ' ')}
 }}
     """
@@ -95,19 +107,42 @@ ${matrix.joinToString(separator = "\n") {
     """
 }
 
-fun printMatrixBitwiseOps(matrix: Array<Array<Int>>): String {
+@kotlin.ExperimentalUnsignedTypes
+@kotlin.ExperimentalStdlibApi
+fun printMatrixBitwiseOpsSet(matrix: Array<Array<Int>>): String {
     return """
-// set bits
-${matrix.joinToString(separator = "\n") {
-    it.joinToString(separator = " ", prefix = "// ") { number ->
-        when (number / 16) {
-            0 -> "\\/"
-            1 -> "< "
-            2 -> "/\\"
-            3 -> " >"
-            else -> " " // never
-        }
-    }
-}}
+// for setting a bit to true using `matrix | mat_set_masks[x][y]`
+${matrix.joinToString(
+        prefix = "static unsigned long long mat_set_masks[8][8] = {\n",
+        separator = ",\n",
+        postfix = "\n};") {
+        it.joinToString(separator = ", ", prefix = "    {", postfix = "}") { number -> "0x${(1u.toULong().rotateLeft(number)).toString(16).padEnd(16, ' ')}"}
+    }}
+    """
+}
+
+@kotlin.ExperimentalUnsignedTypes
+@kotlin.ExperimentalStdlibApi
+fun printMatrixBitwiseOpsUnset(matrix: Array<Array<Int>>): String {
+    return """
+// for setting a bit to false using `matrix & mat_unset_masks[x][y]`
+${matrix.joinToString(
+        prefix = "static unsigned long long mat_unset_masks[8][8] = {\n",
+        separator = ",\n",
+        postfix = "\n};") {
+        it.joinToString(separator = ", ", prefix = "    {", postfix = "}") { number -> "0x${(1u.toULong().rotateLeft(number).inv()).toString(16).padEnd(16, ' ')}"}
+    }}
+    """
+}
+
+@kotlin.ExperimentalUnsignedTypes
+@kotlin.ExperimentalStdlibApi
+fun printMatrixBitwiseOpsDocs(matrix: Array<Array<Int>>): String {
+    return """
+// mask positions
+${matrix.joinToString(
+        separator = "\n") {
+        it.joinToString(separator = " ", prefix = "// ") { number -> (1u.toULong().rotateLeft(number)).toString(2).padStart(64, '0') }
+    }}
     """
 }
