@@ -42,8 +42,8 @@ fun main() {
 fun printMatrix(matrix: Array<Array<Int>>) {
     println("// to get positions at runtime")
     println(
-        matrix.joinToString(prefix = "static unsigned short[8][8] mat_positions = {\n", separator = ",\n", postfix = "\n}") {
-            it.joinToString(separator = ", ", prefix = "    {", postfix = "}") { number -> String.format("%02d", number) }
+        matrix.joinToString(prefix = "static unsigned short mat_positions[8][8] = {\n", separator = ",\n", postfix = "\n}") {
+            it.joinToString(separator = ", ", prefix = "    {", postfix = "}") { number -> number.toString().padStart(2, ' ') }
         }
     )
 }
